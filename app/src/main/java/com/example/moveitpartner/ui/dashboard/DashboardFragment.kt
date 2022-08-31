@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,15 +26,13 @@ class DashboardFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: HomeViewModel
+    private val viewModel: HomeViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        viewModel = ViewModelProvider(requireActivity()).get(HomeViewModel::class.java)
 
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
 
@@ -48,7 +46,7 @@ class DashboardFragment : Fragment() {
         binding.workoutLogRecyclerView.layoutManager = layoutManager
         val adapter = DashboardAdapter()
         binding.workoutLogRecyclerView.adapter = adapter
-        viewModel.workoutLog.observe(viewLifecycleOwner, Observer { newWorkoutLog ->
+        viewModel.dao.getAll().observe(viewLifecycleOwner, Observer { newWorkoutLog ->
             adapter.submitList(newWorkoutLog)
         })
     }
@@ -82,7 +80,7 @@ class DashboardFragment : Fragment() {
     }
     object WorkoutLogDiffCallback: DiffUtil.ItemCallback<WorkoutLog>() {
         override fun areItemsTheSame(oldItem: WorkoutLog, newItem: WorkoutLog): Boolean {
-            return oldItem.startTime == newItem.startTime
+            return oldItem.logId == newItem.logId
         }
 
         override fun areContentsTheSame(oldItem: WorkoutLog, newItem: WorkoutLog): Boolean {

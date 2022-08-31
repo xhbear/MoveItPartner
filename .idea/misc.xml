@@ -12,6 +12,7 @@
         <entry key="app/src/main/res/layout/fragment_sadkitty_bulletin.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_welcome_bulletin.xml" value="0.1" />
         <entry key="app/src/main/res/layout/workoutlog_layout.xml" value="0.1" />
+        <entry key="app/src/main/res/menu/bottom_nav_menu.xml" value="0.45" />
       </map>
     </option>
   </component>

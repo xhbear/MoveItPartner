@@ -11,6 +11,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.example.moveitpartner.WorkoutLogDatabase
+import com.example.moveitpartner.WorkoutViewModelFactory
 import com.example.moveitpartner.databinding.FragmentHomeBinding
 import com.example.moveitpartner.ui.home.bulletin.SadKittyBulletinFragment
 import com.example.moveitpartner.ui.home.bulletin.WelcomeBulletinFragment
@@ -36,33 +38,37 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        val root: View = binding.root
+        val view: View = binding.root
 
-        model = ViewModelProvider(requireActivity()).get(HomeViewModel::class.java)
+        val application = requireNotNull(this.activity).application
+        val dao = WorkoutLogDatabase.getInstance(application).workoutDao
+        val viewModelFactory = WorkoutViewModelFactory(dao)
+
+        model = ViewModelProvider(requireActivity(), viewModelFactory).get(HomeViewModel::class.java)
         viewPager = binding.welcomeBulletin
 
         val pagerAdapter = BulletinAdapter(this)
         viewPager.adapter = pagerAdapter
 
-        return root
+        return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.logTime.setOnClickListener {
             val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
-            model.viewModelScope.launch {
-                if (model.clockCounter.value == 0) {
-                    model.setClockInTime()
-                    val time = model.clockInTime.value!!.format(formatter)
-                    Toast.makeText(context, "CLOCKED-IN at $time", Toast.LENGTH_SHORT).show()
-                } else {
-                    model.setClockOutTime()
-                    val time = model.clockOutTime.value!!.format(formatter)
-                    Toast.makeText(context, "CLOCKED-OUT at $time", Toast.LENGTH_SHORT).show()
-                    model.resetTimeValues()
-                }
+
+            if (model.clockCounter.value == 0) {
+                model.setClockInTime()
+                val time = model.clockInTime.value!!.format(formatter)
+                Toast.makeText(context, "CLOCKED-IN at $time", Toast.LENGTH_SHORT).show()
+            } else {
+                model.setClockOutTime()
+                val time = model.clockOutTime.value!!.format(formatter)
+                Toast.makeText(context, "CLOCKED-OUT at $time", Toast.LENGTH_SHORT).show()
+                model.resetTimeValues()
             }
+
         }
         model.clockCounter.observe(viewLifecycleOwner, Observer { newCounterValue ->
             model.displaySessionRunning(binding.sessionRunningMsg, newCounterValue)

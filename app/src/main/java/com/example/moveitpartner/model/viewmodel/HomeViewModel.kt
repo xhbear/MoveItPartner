@@ -12,11 +12,14 @@ import android.view.View.VISIBLE
 import android.widget.TextView
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.moveitpartner.WorkoutDao
 import com.example.moveitpartner.model.data.WorkoutLog
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(val dao: WorkoutDao) : ViewModel() {
 
     /** set formatted welcome txt to home fragment */
     fun setWelcomeTxt(view: TextView) {
@@ -54,25 +57,17 @@ class HomeViewModel : ViewModel() {
 
     fun setClockOutTime() {
         _clockOutTime.value = setTime()
-        calculateWorkoutDuration()
-        _workoutLog.value = addWorkoutLogEntry(clockInTime.value!!, clockOutTime.value!!, duration.value!!)
+        viewModelScope.launch {
+            calculateWorkoutDuration()
+            val workoutLog = WorkoutLog(startTime = clockInTime.value.toString(), endTime = clockOutTime.value.toString(), duration = duration.value!!)
+            dao.insert(workoutLog)
+        }
     }
 
     private fun calculateWorkoutDuration() {
         val start = clockInTime.value!!
         val end = clockOutTime.value!!
         _duration.value = start.until(end, ChronoUnit.SECONDS)
-    }
-
-    private fun addWorkoutLogEntry(start: LocalDateTime, end: LocalDateTime, duration: Long): List<WorkoutLog> {
-        val workout = mutableListOf<WorkoutLog>()
-        if (workoutLog.value!= null) {
-            for (log in workoutLog.value!!) {
-                workout.add(log)
-            }
-        }
-        workout.add(WorkoutLog(start, end, duration))
-        return workout
     }
 
     fun resetTimeValues() {
